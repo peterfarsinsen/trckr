@@ -5,7 +5,12 @@ socket.on('location', function(data) {
   var res = JSON.parse(data);
   marker.setLatLng([res.lat, res.long])
     .getPopup()
-    .setContent('Lat: ' + res.lat + 'Lng: ' + res.long);
+    .setContent(
+      'Lat: ' + res.lat
+      + '<br>Lng: ' + res.long
+      + '<br>At: ' + res.year + '/' + res.date + '/' + res.month
+      + ' ' + res.hours + ':' + res.minutes + ':' + res.seconds
+    );
   marker.openPopup();
 });
 
