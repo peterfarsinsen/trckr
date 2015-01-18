@@ -1,0 +1,32 @@
+{
+  "name": "Trckr",
+  "version": "0.0.0",
+  "description": "Trckr is a GPS tracker thingie",
+  "main": "tcp_server.js",
+  "dependencies": {
+    "mongodb": "~1.4.28",
+    "debug": "~2.1.1",
+    "express": "~4.11.0",
+    "socket.io": "~1.2.1",
+    "leaflet": "~0.7.3",
+    "nan": "~1.5.1",
+    "zmq": "~2.9.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/peterfarsinsen/trckr"
+  },
+  "keywords": [
+    "gps",
+    "tracker"
+  ],
+  "author": "Peter Farsinsen",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/peterfarsinsen/trckr/issues"
+  }
+}
