@@ -1,4 +1,5 @@
-var app = require('express')(),
+var express = require('express'),
+    app = express(),
     http = require('http').Server(app),
     io = require('socket.io')(http),
     debug = require('debug')('http'),
@@ -16,8 +17,10 @@ zmqSock.on('message', function(msg){
   }
 });
 
+app.use('/static', express.static(__dirname + '/public'));
+
 app.get('/', function(req, res){
-  res.sendFile(__dirname + '/webroot/index.html');
+  res.sendFile(__dirname + '/views/index.html');
 });
 
 io.on('connection', function(socket){
