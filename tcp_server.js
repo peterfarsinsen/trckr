@@ -6,6 +6,29 @@ var net = require('net'),
 
 zmqSock.bindSync('tcp://' + config.zmq_server.host + ':' + config.zmq_server.port);
 
+// Look away
+var convertLat = function(lat) {
+  var deg = lat.slice(0, 2),
+      minutes = lat.slice(2, lat.length);
+  minutes = (Number(minutes)/60)*100;
+  minutes = minutes < 10 ? '0' + minutes : minutes;
+  minutes = String(minutes).replace('.', '');
+
+  return Number(deg + '.' + minutes).toFixed(5);
+}
+
+// Dont look
+var convertLng = function(lng) {
+  var deg = lng.slice(0, 3),
+      part = lng.slice(3, lng.length);
+
+  part = (Number(part)/60)*100;
+  part = part < 10 ? '0' + part : part;
+  part = String(part).replace('.', '');
+
+  return Number(deg + '.' + part).toFixed(5);
+}
+
 var server = net.createServer(function (s) {
   s.on('data', function(data) {
 
@@ -51,10 +74,10 @@ var server = net.createServer(function (s) {
       rec.month         = data.toString('ascii', 18, 20);
       rec.date          = data.toString('ascii', 20, 22);
       rec.status        = data.toString('ascii', 22, 23);
-      rec.lat           = data.toString('ascii', 23, 32)*1 / 100;
+      rec.lat           = convertLat(data.toString('ascii', 23, 32));
       rec.latIndicator  = data.toString('ascii', 32, 33);
-      rec.long          = data.toString('ascii', 33, 43)*1 / 100;
-      rec.longIndicator = data.toString('ascii', 43, 44);
+      rec.lng           = convertLng(data.toString('ascii', 33, 43));
+      rec.lngIndicator  = data.toString('ascii', 43, 44);
       rec.speed         = data.toString('ascii', 44, 49);
       rec.hours         = data.toString('ascii', 49, 51);
       rec.minutes       = data.toString('ascii', 51, 53);
