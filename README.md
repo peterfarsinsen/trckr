@@ -12,6 +12,10 @@ Pull requests are welcomed!
 ## Getting started
 Run ```npm install``` to install Trckrs dependencies.
 
+Run ```npm install -g bower``` to install Bower
+
+Run ```bower install``` to install client side dependencies
+
 Run ```node tcp_server.js``` to start the TCP server, that collects location data from your GPS tracker device(s).
 
 Run ```node http_server.js``` to start the HTTP server, that shows the location of your GPS tracker devices.
