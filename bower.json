@@ -1,0 +1,26 @@
+{
+  "name": "trckr",
+  "version": "0.0.0",
+  "homepage": "https://github.com/peterfarsinsen/trckr",
+  "description": "Trckr is a GPS tracker thingie",
+  "keywords": [
+    "gps",
+    "tracker",
+    "gis"
+  ],
+  "authors": [
+    "Peter Farsinsen <peter@farsinsen.dk>"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "leaflet": "Leaflet/Leaflet#~0.7.3"
+  }
+}
