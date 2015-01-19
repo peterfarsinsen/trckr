@@ -18,6 +18,7 @@ zmqSock.on('message', function(msg){
 });
 
 app.use('/static', express.static(__dirname + '/public'));
+app.use('/static', express.static(__dirname + '/bower_components'));
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/views/index.html');
