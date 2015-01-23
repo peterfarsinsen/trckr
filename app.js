@@ -1,10 +1,49 @@
-var net = require('net'),
-    zmq = require('zmq'),
-    zmqSock = zmq.socket('push'),
-    debug = require('debug')('gps'),
-    config = require('./config.json');
+var express = require('express');
+var app = express();
+var path = require('path');
+var favicon = require('serve-favicon');
+var logger = require('morgan');
+var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
+var net = require('net');
 
-zmqSock.bindSync('tcp://' + config.zmq_server.host + ':' + config.zmq_server.port);
+var routes = require('./routes/index');
+
+var httpServer = require('http').Server(app);
+var io = require('socket.io')(httpServer);
+httpServer.listen(43000);
+
+// Connect to mongo
+app.locals.db = require('mongoskin').db('mongodb://localhost:27017/trckr');
+
+// Connected clients
+app.locals.clients = [];
+
+// Store clients for later
+io.on('connection', function(socket){
+  app.locals.clients.push(socket);
+  socket.on('disconnect', function(){
+    // delete the client
+  });
+});
+
+var emitPoint = function(point) {
+  for (var i = 0, len = app.locals.clients.length; i < len; i++) {
+    app.locals.clients[i].emit('location', msg.toString());
+  }
+};
+
+var savePoint = function(point) {
+  app.locals.db.collection('points').insert([point], function(err, result) {
+    debug('save result', err, result);
+  });
+};
+
+var saveHeartbeat = function(heartbeat) {
+  app.locals.db.collection('heartbeats').insert([heartbeat], function(err, result) {
+    debug('save result', err, result);
+  });
+};
 
 // Look away
 var convertLat = function(lat) {
@@ -17,7 +56,7 @@ var convertLat = function(lat) {
   return Number(deg + '.' + minutes).toFixed(5);
 }
 
-// Dont look
+// Told you not to look
 var convertLng = function(lng) {
   var deg = lng.slice(0, 3),
       part = lng.slice(3, lng.length);
@@ -29,8 +68,8 @@ var convertLng = function(lng) {
   return Number(deg + '.' + part).toFixed(5);
 }
 
-var server = net.createServer(function (s) {
-  s.on('data', function(data) {
+var server = net.createServer(function (socket) {
+  socket.on('data', function(data) {
 
     // Determin message type
     var msgType = null;
@@ -86,6 +125,9 @@ var server = net.createServer(function (s) {
       rec.status        = data.toString('ascii', 61, 69);
       rec.l             = data.toString('ascii', 69, 70);
       rec.milage        = data.toString('ascii', 70, 78);
+
+      savePoint(rec);
+      emitPoint(rec);
     } else if (msgType === 'heartbeat') {
       /**
        * Example record: (027042854711BP00000027042854711HSO)
@@ -100,10 +142,68 @@ var server = net.createServer(function (s) {
       rec.command       = data.toString('ascii', 12, 16);
       rec.deviceId      = data.toString('ascii', 16, 31);
       rec.body          = data.toString('ascii', 31, 34);
-    }
 
-    zmqSock.send(JSON.stringify(rec));
+      saveHeartbeat(rec);
+    }
   });
 });
 
-server.listen(config.tcp_server.port);
+server.listen(43510);
+
+// app.locals.db.collection('points').findOne({}, function(err, result) {
+//   if (err) throw err;
+//   console.log(result);
+// });
+
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
+
+// uncomment after placing your favicon in /public
+//app.use(favicon(__dirname + '/public/favicon.ico'));
+app.use(logger('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use('/static', express.static(path.join(__dirname, 'public')));
+app.use('/static', express.static(path.join(__dirname, 'bower_components')));
+
+// Temp / binding
+app.get('/', function(req, res){
+  res.sendFile(__dirname + '/views/index.html');
+});
+
+//app.use('/', routes);
+
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+    var err = new Error('Not Found');
+    err.status = 404;
+    next(err);
+});
+
+// error handlers
+
+// development error handler
+// will print stacktrace
+// if (app.get('env') === 'development') {
+//     app.use(function(err, req, res, next) {
+//         res.status(err.status || 500);
+//         res.render('error', {
+//             message: err.message,
+//             error: err
+//         });
+//     });
+// }
+
+// production error handler
+// no stacktraces leaked to user
+// app.use(function(err, req, res, next) {
+//     res.status(err.status || 500);
+//     res.render('error', {
+//         message: err.message,
+//         error: {}
+//     });
+// });
+
+module.exports = app;

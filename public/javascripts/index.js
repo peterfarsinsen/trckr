@@ -1,6 +1,20 @@
 var socket = io();
     marker = null;
 
+
+var map = new L.Map('map'),
+    osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+    osmLayer = new L.TileLayer(osmUrl, {minZoom: 8, maxZoom: 20, attribution: osmAttrib});
+
+var ll = [57.04264, 9.91881];
+map.setView(ll,12);
+map.addLayer(osmLayer);
+
+marker = L.marker(ll)
+  .addTo(map)
+  .bindPopup();
+
 socket.on('location', function(data) {
   var res = JSON.parse(data);
   console.log('raw', data);
@@ -14,16 +28,6 @@ socket.on('location', function(data) {
       + ' ' + res.hours + ':' + res.minutes + ':' + res.seconds
     );
   marker.openPopup();
+  map.setView([res.lat, res.lng]);
 });
 
-var map = new L.Map('map'),
-    osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-    osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
-    osmLayer = new L.TileLayer(osmUrl, {minZoom: 8, maxZoom: 20, attribution: osmAttrib});
-
-map.setView(new L.LatLng(57.04264, 9.91881),9);
-map.addLayer(osmLayer);
-
-marker = L.marker([57.04264, 9.91881])
-  .addTo(map)
-  .bindPopup();
