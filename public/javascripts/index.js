@@ -11,14 +11,19 @@ var ll = [57.04264, 9.91881];
 map.setView(ll,12);
 map.addLayer(osmLayer);
 
-marker = L.marker(ll)
-  .addTo(map)
-  .bindPopup();
+
 
 socket.on('location', function(data) {
   var res = JSON.parse(data);
   console.log('raw', data);
   console.log('data', res);
+
+  if(marker === null) {
+    marker = L.marker(ll)
+      .addTo(map)
+      .bindPopup();
+  }
+
   marker.setLatLng([res.lat, res.lng])
     .getPopup()
     .setContent(

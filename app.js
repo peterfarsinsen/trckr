@@ -22,14 +22,26 @@ app.locals.clients = [];
 // Store clients for later
 io.on('connection', function(socket){
   app.locals.clients.push(socket);
+
+  getLastPoint(function(point) {
+    emitPoint(point);
+  });
+
   socket.on('disconnect', function(){
     // delete the client
   });
 });
 
+var getLastPoint = function(cb) {
+  app.locals.db.collection('points').find({command: "BR00"}).sort({year: -1, month: -1, date: -1, hour: -1, minutes: -1, seconds: -1}).limit(1).toArray(function(err, result) {
+    if (err) throw err;
+    cb(result[0]);
+  });
+};
+
 var emitPoint = function(point) {
   for (var i = 0, len = app.locals.clients.length; i < len; i++) {
-    app.locals.clients[i].emit('location', msg.toString());
+    app.locals.clients[i].emit('location', JSON.stringify(point));
   }
 };
 
@@ -150,10 +162,7 @@ var server = net.createServer(function (socket) {
 
 server.listen(43510);
 
-// app.locals.db.collection('points').findOne({}, function(err, result) {
-//   if (err) throw err;
-//   console.log(result);
-// });
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
