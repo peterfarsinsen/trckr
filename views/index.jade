@@ -1,6 +1,10 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
-  div Point !{JSON.stringify(point)};
+  link(rel="stylesheet" href="/static/leaflet/dist/leaflet.css")
+  link(rel="stylesheet" href="/static/stylesheets/index.css")
+  div#map
+  script(src="/static/leaflet/dist/leaflet.js")
+  script(src="/socket.io/socket.io.js")
+  script(src="/static/javascripts/index.js")
+

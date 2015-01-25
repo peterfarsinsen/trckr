@@ -34,7 +34,7 @@ io.on('connection', function(socket){
 });
 
 var getLastPoint = function(cb) {
-  app.locals.db.collection('points').find({command: "BR00"}).sort({year: -1, month: -1, date: -1, hour: -1, minutes: -1, seconds: -1}).limit(1).toArray(function(err, result) {
+  app.locals.db.collection('points').find({command: "BR00"}).sort({timestamp: -1}).limit(1).toArray(function(err, result) {
     if (err) throw err;
     cb(result[0]);
   });
@@ -166,21 +166,18 @@ server.listen(43510);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(__dirname + '/public/favicon.ico'));
+app.use(favicon(__dirname + '/public/favicon.ico'));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+// Mount folders with static assets to /static
 app.use('/static', express.static(path.join(__dirname, 'public')));
 app.use('/static', express.static(path.join(__dirname, 'bower_components')));
 
-// Temp / binding
-app.get('/', function(req, res){
-  res.sendFile(__dirname + '/views/index.html');
-});
-
-//app.use('/', routes);
+// Define route(s)
+app.use('/', routes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -193,24 +190,24 @@ app.use(function(req, res, next) {
 
 // development error handler
 // will print stacktrace
-// if (app.get('env') === 'development') {
-//     app.use(function(err, req, res, next) {
-//         res.status(err.status || 500);
-//         res.render('error', {
-//             message: err.message,
-//             error: err
-//         });
-//     });
-// }
+if (app.get('env') === 'development') {
+    app.use(function(err, req, res, next) {
+        res.status(err.status || 500);
+        res.render('error', {
+            message: err.message,
+            error: err
+        });
+    });
+}
 
 // production error handler
 // no stacktraces leaked to user
-// app.use(function(err, req, res, next) {
-//     res.status(err.status || 500);
-//     res.render('error', {
-//         message: err.message,
-//         error: {}
-//     });
-// });
+app.use(function(err, req, res, next) {
+    res.status(err.status || 500);
+    res.render('error', {
+        message: err.message,
+        error: {}
+    });
+});
 
 module.exports = app;
