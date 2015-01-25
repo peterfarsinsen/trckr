@@ -34,7 +34,7 @@ socket.on('location', function(data) {
     .setContent(
       'Lat: ' + res.lat
       + '<br>Lng: ' + res.lng
-      + '<br>At: ' + res.timestamp
+      + '<br>At: ' + new Date(res.timestamp)
     );
   marker.openPopup();
   map.setView([res.lat, res.lng]);
