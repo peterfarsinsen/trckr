@@ -6,6 +6,7 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var net = require('net');
+var debug = require('debug')('app');
 
 var routes = require('./routes/index');
 
@@ -58,26 +59,15 @@ var saveHeartbeat = function(heartbeat) {
 };
 
 // Look away
-var convertLat = function(lat) {
-  var deg = lat.slice(0, 2),
-      minutes = lat.slice(2, lat.length);
+var convertLatLng = function(input) {
+  var degreesLength = input.length === 10 ? 3 : 2,
+      degrees = input.slice(0, degreesLength),
+      minutes = input.slice(degreesLength, input.length);
   minutes = (Number(minutes)/60)*100;
   minutes = minutes < 10 ? '0' + minutes : minutes;
   minutes = String(minutes).replace('.', '');
 
-  return Number(deg + '.' + minutes).toFixed(5);
-}
-
-// Told you not to look
-var convertLng = function(lng) {
-  var deg = lng.slice(0, 3),
-      part = lng.slice(3, lng.length);
-
-  part = (Number(part)/60)*100;
-  part = part < 10 ? '0' + part : part;
-  part = String(part).replace('.', '');
-
-  return Number(deg + '.' + part).toFixed(5);
+  return Number(degrees + '.' + minutes).toFixed(5);
 }
 
 var server = net.createServer(function (socket) {
@@ -92,6 +82,7 @@ var server = net.createServer(function (socket) {
       msgType = 'location';
     } else {
       // Unknown message type
+      throw 'Unknown message type for message' + data.toString();
       return;
     }
 
@@ -123,20 +114,29 @@ var server = net.createServer(function (socket) {
       rec.command       = data.toString('ascii', 12, 16);
       rec.year          = data.toString('ascii', 16, 18);
       rec.month         = data.toString('ascii', 18, 20);
-      rec.date          = data.toString('ascii', 20, 22);
+      rec.day           = data.toString('ascii', 20, 22);
       rec.status        = data.toString('ascii', 22, 23);
-      rec.lat           = convertLat(data.toString('ascii', 23, 32));
+      rec.lat           = convertLatLng(data.toString('ascii', 23, 32));
       rec.latIndicator  = data.toString('ascii', 32, 33);
-      rec.lng           = convertLng(data.toString('ascii', 33, 43));
+      rec.lng           = convertLatLng(data.toString('ascii', 33, 43));
       rec.lngIndicator  = data.toString('ascii', 43, 44);
       rec.speed         = data.toString('ascii', 44, 49);
-      rec.hours         = data.toString('ascii', 49, 51);
-      rec.minutes       = data.toString('ascii', 51, 53);
-      rec.seconds       = data.toString('ascii', 53, 55);
+      rec.hour          = data.toString('ascii', 49, 51);
+      rec.minute        = data.toString('ascii', 51, 53);
+      rec.second        = data.toString('ascii', 53, 55);
       rec.orientation   = data.toString('ascii', 55, 61);
       rec.status        = data.toString('ascii', 61, 69);
       rec.l             = data.toString('ascii', 69, 70);
       rec.milage        = data.toString('ascii', 70, 78);
+
+      rec.timestamp     = new Date(Date.UTC(
+        parseInt(rec.year, 10) + 2000, // Otherwise Data defaults to 19xx
+        parseInt(rec.month) - 1, // Month is zero based, because Javascript
+        parseInt(rec.day),
+        parseInt(rec.hour),
+        parseInt(rec.minute),
+        parseInt(rec.second)
+      ));
 
       savePoint(rec);
       emitPoint(rec);
@@ -161,8 +161,6 @@ var server = net.createServer(function (socket) {
 });
 
 server.listen(43510);
-
-
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
