@@ -67,7 +67,7 @@ var convertLatLng = function(input) {
   minutes = minutes < 10 ? '0' + minutes : minutes;
   minutes = String(minutes).replace('.', '');
 
-  return Number(degrees + '.' + minutes).toFixed(5);
+  return parseFloat(Number(degrees + '.' + minutes).toFixed(5));
 }
 
 var server = net.createServer(function (socket) {
