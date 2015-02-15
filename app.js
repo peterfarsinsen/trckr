@@ -76,87 +76,94 @@ var server = net.createServer(function (socket) {
     // Determin message type
     var msgType = null;
 
-    if(data.length === 36) {
-      msgType = 'heartbeat';
-    } else if (data.length === 80) {
-      msgType = 'location';
-    } else {
-      // Unknown message type
-      throw 'Unknown message type for message' + data.toString();
-      return;
-    }
-
     // Trim leading and trailing parens
     data = data.slice(1,data.length-1);
 
-    if(msgType === 'location') {
-      /**
-       * Example record:
-       * (027042854711BR00150117A5702.5470N00955.1263E000.61648574.770000000000L00000000)
-       *
-       * 027042854711     # imei                        12 chars
-       * BR00             # command                      4 chars
-       * 150117           # date yy/mm/dd                6 chars
-       * A                # A=valid GPS data, V=invalid  1 char
-       * 5702.5470        # lat                          9 chars
-       * N                # lat indicator                1 char
-       * 00955.1263       # long                        10 chars
-       * E                # long indicator               1 char
-       * 000.6            # speed, km/hour               5 chars
-       * 164857           # time hh/mm/ss                6 chars
-       * 4.7700           # orientation, deb             6 chars
-       * 00000000         # status                       8 chars
-       * L                # always L ?                   1 char
-       * 00000000         # mean milage ?                8 chars
-       */
-      var rec = {};
-      rec.imei          = data.toString('ascii',  0, 12);
-      rec.command       = data.toString('ascii', 12, 16);
-      rec.year          = data.toString('ascii', 16, 18);
-      rec.month         = data.toString('ascii', 18, 20);
-      rec.day           = data.toString('ascii', 20, 22);
-      rec.status        = data.toString('ascii', 22, 23);
-      rec.lat           = convertLatLng(data.toString('ascii', 23, 32));
-      rec.latIndicator  = data.toString('ascii', 32, 33);
-      rec.lng           = convertLatLng(data.toString('ascii', 33, 43));
-      rec.lngIndicator  = data.toString('ascii', 43, 44);
-      rec.speed         = data.toString('ascii', 44, 49);
-      rec.hour          = data.toString('ascii', 49, 51);
-      rec.minute        = data.toString('ascii', 51, 53);
-      rec.second        = data.toString('ascii', 53, 55);
-      rec.orientation   = data.toString('ascii', 55, 61);
-      rec.status        = data.toString('ascii', 61, 69);
-      rec.l             = data.toString('ascii', 69, 70);
-      rec.milage        = data.toString('ascii', 70, 78);
+    // Split string by ")(" (if messages are concatinated)
+    var arr = data.toString().split(")(");
 
-      rec.timestamp     = new Date(Date.UTC(
-        parseInt(rec.year, 10) + 2000, // Otherwise Data defaults to 19xx
-        parseInt(rec.month) - 1, // Month is zero based, because Javascript
-        parseInt(rec.day),
-        parseInt(rec.hour),
-        parseInt(rec.minute),
-        parseInt(rec.second)
-      ));
+    // for each element run the following
+    arr.forEach(function(data) {
 
-      savePoint(rec);
-      emitPoint(rec);
-    } else if (msgType === 'heartbeat') {
-      /**
-       * Example record: (027042854711BP00000027042854711HSO)
-       *
-       * 027042854711       # imei            12 chars
-       * BP00               # record type      4 chars
-       * 000027042854711    # device id       15 chars
-       * HSO                # message body     3 chars
-       */
-      var rec = {};
-      rec.imei          = data.toString('ascii',  0, 12);
-      rec.command       = data.toString('ascii', 12, 16);
-      rec.deviceId      = data.toString('ascii', 16, 31);
-      rec.body          = data.toString('ascii', 31, 34);
+      if(data.length === 34) {
+        msgType = 'heartbeat';
+      } else if (data.length === 78) {
+        msgType = 'location';
+      } else {
+        // Unknown message type
+        throw 'Unknown message type for message' + data.toString();
+        return;
+      }
 
-      saveHeartbeat(rec);
-    }
+      if(msgType === 'location') {
+        /**
+         * Example record:
+         * (027042854711BR00150117A5702.5470N00955.1263E000.61648574.770000000000L00000000)
+         *
+         * 027042854711     # imei                        12 chars
+         * BR00             # command                      4 chars
+         * 150117           # date yy/mm/dd                6 chars
+         * A                # A=valid GPS data, V=invalid  1 char
+         * 5702.5470        # lat                          9 chars
+         * N                # lat indicator                1 char
+         * 00955.1263       # long                        10 chars
+         * E                # long indicator               1 char
+         * 000.6            # speed, km/hour               5 chars
+         * 164857           # time hh/mm/ss                6 chars
+         * 4.7700           # orientation, deb             6 chars
+         * 00000000         # status                       8 chars
+         * L                # always L ?                   1 char
+         * 00000000         # mean milage ?                8 chars
+         */
+        var rec = {};
+        rec.imei          = data.substring(0, 12);
+        rec.command       = data.substring(12, 16);
+        rec.year          = data.substring(16, 18);
+        rec.month         = data.substring(18, 20);
+        rec.day           = data.substring(20, 22);
+        rec.status        = data.substring(22, 23);
+        rec.lat           = parseFloat(convertLatLng(data.substring(23, 32)));
+        rec.latIndicator  = data.substring(32, 33);
+        rec.lng           = parseFloat(convertLatLng(data.substring(33, 43)));
+        rec.lngIndicator  = data.substring(43, 44);
+        rec.speed         = parseFloat(data.substring(44, 49));
+        rec.hour          = data.substring(49, 51);
+        rec.minute        = data.substring(51, 53);
+        rec.second        = data.substring(53, 55);
+        rec.orientation   = parseFloat(data.substring(55, 61));
+        rec.status        = data.substring(61, 69);
+        rec.l             = data.substring(69, 70);
+        rec.milage        = data.substring(70, 78);
+
+        rec.timestamp     = new Date(Date.UTC(
+          parseInt(rec.year, 10) + 2000, // Otherwise Data defaults to 19xx
+          parseInt(rec.month) - 1, // Month is zero based, because Javascript
+          parseInt(rec.day),
+          parseInt(rec.hour),
+          parseInt(rec.minute),
+          parseInt(rec.second)
+        ));
+
+        savePoint(rec);
+        emitPoint(rec);
+      } else if (msgType === 'heartbeat') {
+        /**
+         * Example record: (027042854711BP00000027042854711HSO)
+         *
+         * 027042854711       # imei            12 chars
+         * BP00               # record type      4 chars
+         * 000027042854711    # device id       15 chars
+         * HSO                # message body     3 chars
+         */
+        var rec = {};
+        rec.imei          = data.substring( 0, 12);
+        rec.command       = data.substring(12, 16);
+        rec.deviceId      = data.substring(16, 31);
+        rec.body          = data.substring(31, 34);
+
+        saveHeartbeat(rec);
+      }
+    });
     socket.end();
   });
 });
