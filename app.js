@@ -67,7 +67,7 @@ var convertLatLng = function(input) {
   minutes = minutes < 10 ? '0' + minutes : minutes;
   minutes = String(minutes).replace('.', '');
 
-  return parseFloat(Number(degrees + '.' + minutes).toFixed(5));
+  return Number(degrees + '.' + minutes).toFixed(5);
 }
 
 var server = net.createServer(function (socket) {
@@ -122,15 +122,15 @@ var server = net.createServer(function (socket) {
         rec.month         = data.substring(18, 20);
         rec.day           = data.substring(20, 22);
         rec.status        = data.substring(22, 23);
-        rec.lat           = convertLatLng(data.substring(23, 32));
+        rec.lat           = parseFloat(convertLatLng(data.substring(23, 32)));
         rec.latIndicator  = data.substring(32, 33);
-        rec.lng           = convertLatLng(data.substring(33, 43));
+        rec.lng           = parseFloat(convertLatLng(data.substring(33, 43)));
         rec.lngIndicator  = data.substring(43, 44);
-        rec.speed         = data.substring(44, 49);
+        rec.speed         = parseFloat(data.substring(44, 49));
         rec.hour          = data.substring(49, 51);
         rec.minute        = data.substring(51, 53);
         rec.second        = data.substring(53, 55);
-        rec.orientation   = data.substring(55, 61);
+        rec.orientation   = parseFloat(data.substring(55, 61));
         rec.status        = data.substring(61, 69);
         rec.l             = data.substring(69, 70);
         rec.milage        = data.substring(70, 78);
