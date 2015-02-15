@@ -157,6 +157,7 @@ var server = net.createServer(function (socket) {
 
       saveHeartbeat(rec);
     }
+    socket.end();
   });
 });
 
